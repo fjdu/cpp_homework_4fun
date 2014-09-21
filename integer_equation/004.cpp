@@ -85,15 +85,15 @@ LONG int_eq_count_divide(LONG *coeff, int ibg, int ied, LONG b) {
 
 
 int main(int argc, char *argv[]){
-    LONG *coeffs, b;
+    LONG *coeff, b;
     int ncoeff = argc - 2;
-    coeffs = new LONG[ncoeff];
+    coeff = new LONG[ncoeff];
     for (int i=0; i<ncoeff; i++) {
-        coeffs[i] = atol(argv[i+1]);
+        coeff[i] = atol(argv[i+1]);
 #ifdef VERBOSE
-        if (coeffs[i] <= 0) {
+        if (coeff[i] <= 0) {
             printf("Nonpositive coefficient!\n");
-            printf("coeffs[%d] = %llu\n", i, coeffs[i]);
+            printf("coeff[%d] = %llu\n", i, coeff[i]);
             return -1;
         }
 #endif
@@ -101,14 +101,14 @@ int main(int argc, char *argv[]){
     b = atol(argv[argc-1]);
 #ifdef VERBOSE
     for (int i=0; i<ncoeff-1; i++) {
-        printf("%llu * x%d + ", coeffs[i], i+1);
+        printf("%llu * x%d + ", coeff[i], i+1);
     }
-    printf("%llu * x%d", coeffs[ncoeff-1], ncoeff);
+    printf("%llu * x%d", coeff[ncoeff-1], ncoeff);
     printf(" = %llu\n", b);
     printf("Number of nonnegative solutions:\n");
 #endif
-    printf("\t%llu\n", int_eq_count_divide(coeffs, 0, ncoeff-1, b));
+    printf("\t%llu\n", int_eq_count_divide(coeff, 0, ncoeff-1, b));
     //printf("Number of positive solutions:\n");
-    //printf("\t%d\n", int_eq_count_nonzero(coeffs, 0, ncoeff-1, b));
+    //printf("\t%d\n", int_eq_count_nonzero(coeff, 0, ncoeff-1, b));
     return 0;
 }
