@@ -90,15 +90,22 @@ int main(int argc, char *argv[]){
     coeff = new LONG[ncoeff];
     for (int i=0; i<ncoeff; i++) {
         coeff[i] = atol(argv[i+1]);
-#ifdef VERBOSE
         if (coeff[i] <= 0) {
+#ifdef VERBOSE
             printf("Nonpositive coefficient!\n");
             printf("coeff[%d] = %llu\n", i, coeff[i]);
+#endif
             return -1;
         }
-#endif
     }
     b = atol(argv[argc-1]);
+    if (b <= 0) {
+#ifdef VERBOSE
+        printf("Nonpositive total!\n");
+        printf("b = %llu\n", b);
+#endif
+        return -1;
+    }
 #ifdef VERBOSE
     for (int i=0; i<ncoeff-1; i++) {
         printf("%llu * x%d + ", coeff[i], i+1);
