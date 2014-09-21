@@ -4,37 +4,6 @@
 #define LONG long long
 
 
-//LONG int_eq_count(LONG *coeff, int ibg, int ied, LONG b) {
-//    if (ied - ibg == 0) {
-//        if (coeff[ibg] == 0) {
-//            if (b == 0) {
-//                return 1;
-//            } else {
-//                return 0;
-//            }
-//        } else {
-//            return ((b%coeff[ibg]) == 0) ? 1 : 0;
-//        }
-//    } else if (ied - ibg > 0) {
-//        if (coeff[ibg] > 0) {
-//            LONG nsol = 0;
-//            for (; b>=0; b-=coeff[ibg]) {
-//                nsol += int_eq_count(coeff, ibg+1, ied, b);
-//            }
-//            return nsol;
-//        } else if (coeff[ibg] == 0) {
-//            return int_eq_count(coeff, ibg+1, ied, b);
-//        } else {
-//            printf("Negative coefficient!\n");
-//            printf("coeff[%d] = %llu\n", ibg, coeff[ibg]);
-//            return -1;
-//        }
-//    } else {
-//      return 0;
-//    }
-//}
-//
-//
 //LONG int_eq_count_nonzero(LONG *coeff, int ibg, int ied, LONG b) {
 //    if (ied - ibg == 0) {
 //        if (coeff[ibg] == 0) {
@@ -67,48 +36,8 @@
 //}
 
 
-inline LONG int_eq_count_2(LONG *coeff, int ibg, int ied, LONG b) {
-    if (ied == ibg) {
-        if (coeff[ibg] != 0) {
-            return ((b%coeff[ibg]) == 0) ? 1 : 0;
-        } else {
-            if (b == 0) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
-    } else if (ied == (ibg + 1)) {
-        if ((coeff[ibg] > 1) && (coeff[ied] > 1)) {
-            LONG nsol = 0;
-            for (; b>=0; b-=coeff[ibg]) {
-                nsol += int_eq_count_2(coeff, ied, ied, b);
-                //nsol += !(b%coeff[ied]);
-            }
-            return nsol;
-        } else if (coeff[ibg] == 0) {
-            return int_eq_count_2(coeff, ied, ied, b);
-        } else if (coeff[ied] == 0) {
-            return int_eq_count_2(coeff, ibg, ibg, b);
-        } else if (coeff[ibg] == 1) {
-            return b/coeff[ied] + 1;
-        } else if (coeff[ied] == 1) {
-            return b/coeff[ibg] + 1;
-        } else {
-            printf("Negative coefficient!\n");
-            printf("coeff[%d] = %llu\n", ibg, coeff[ibg]);
-            return -1;
-        }
-    } else {
-      printf("Too many coefficients!\n");
-      printf("n_coeff = %d\n", ied - ibg + 1);
-      return -1;
-    }
-}
-
-
 LONG int_eq_count_divide(LONG *coeff, int ibg, int ied, LONG b) {
-    if (ied - ibg > 1) {
+    if (ied > ibg + 1) {
         int imid = (ibg+ied) >> 1;
         LONG nsol = 0;
         for (LONG i=1; i<b; i++) {
@@ -117,11 +46,38 @@ LONG int_eq_count_divide(LONG *coeff, int ibg, int ied, LONG b) {
                 nsol += int_eq_count_divide(coeff, ibg, imid, i) * nsol_R;
             }
         }
-        nsol += int_eq_count_divide(coeff, ibg,    imid, b);
-        nsol += int_eq_count_divide(coeff, imid+1, ied,  b);
+        nsol += int_eq_count_divide(coeff, ibg,   imid, b);
+        nsol += int_eq_count_divide(coeff, imid+1, ied, b);
         return nsol;
+    } else if (ied == ibg + 1) {
+        LONG a1 = coeff[ibg];
+        LONG a2 = coeff[ied];
+        if (coeff[ibg] < coeff[ied]) {
+            a1 = coeff[ied];
+            a2 = coeff[ibg];
+        }
+#ifdef VERBOSE
+        if (a2 < 1) {
+            printf("Nonpositive coefficient!\n");
+            printf("coeff[%d] = %llu, coeff[%d] = %llu\n", \
+                ibg, coeff[ibg], ied, coeff[ied]);
+            return -1;
+        }
+#endif
+        if (a2 == 1) {
+            return b/a1 + 1;
+        }
+        LONG nsol = 0;
+        for (; b>=0; b-=a1) {
+            nsol += !(b%a2);
+        }
+        return nsol;
+    } else if (ied == ibg) {
+        return !(b%coeff[ibg]);
     } else {
-        return int_eq_count_2(coeff, ibg, ied, b);
+        printf("Wrong case!");
+        printf("ibg = %d, ied = %d\n", ibg, ied);
+        return -1;
     }
 }
 
