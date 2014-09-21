@@ -114,6 +114,16 @@ int main(int argc, char *argv[]){
     printf(" = %llu\n", b);
     printf("Number of nonnegative solutions:\n");
 #endif
+    for (int i=0; i<ncoeff; i++) {
+        for (int j=0; j<i; j++) {
+            if ((coeff[j]!=1) && \
+                ((coeff[j] < coeff[i]) || (coeff[i]==1))) {
+                LONG tmp = coeff[i];
+                coeff[i] = coeff[j];
+                coeff[j] = tmp;
+            }
+        }
+    }
     printf("\t%llu\n", int_eq_count_divide(coeff, 0, ncoeff-1, b));
     //printf("Number of positive solutions:\n");
     //printf("\t%d\n", int_eq_count_nonzero(coeff, 0, ncoeff-1, b));
