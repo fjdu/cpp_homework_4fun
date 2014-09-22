@@ -50,11 +50,14 @@ LONG int_eq_count_divide(LONG *coeff, int ibg, int ied, LONG b) {
         nsol += int_eq_count_divide(coeff, imid+1, ied, b);
         return nsol;
     } else if (ied == ibg + 1) {
-        LONG a1 = coeff[ibg];
-        LONG a2 = coeff[ied];
-        if (coeff[ibg] < coeff[ied]) {
+        LONG a1;
+        LONG a2;
+        if (coeff[ibg] <= coeff[ied]) {
             a1 = coeff[ied];
             a2 = coeff[ibg];
+        } else {
+            a1 = coeff[ibg];
+            a2 = coeff[ied];
         }
 #ifdef DEBUG
         if (a2 < 1) {
