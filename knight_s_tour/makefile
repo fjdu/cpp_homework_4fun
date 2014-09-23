@@ -1,6 +1,6 @@
 cc = g++
 
-fname = y.cpp
+fname = z.cpp
 
 horse: $(fname)
 	$(cc) -O3 $(fname) -o horse
