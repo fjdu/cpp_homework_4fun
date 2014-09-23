@@ -1,7 +1,9 @@
 cc = g++
 
-horse: 003.cpp
-	$(cc) -O3 003.cpp -o horse
+fname = y.cpp
 
-debug: 003.cpp
-	$(cc) -v -da -Q 003.cpp -o debug
+horse: $(fname)
+	$(cc) -O3 $(fname) -o horse
+
+debug: $(fname)
+	$(cc) -v -da -Q $(fname) -o debug

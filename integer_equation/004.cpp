@@ -36,6 +36,59 @@
 //}
 
 
+LONG gcd(LONG u, LONG v)
+//http://en.wikipedia.org/wiki/Binary_GCD_algorithm
+{
+    // simple cases (termination)
+    if (u == v)
+        return u;
+ 
+    if (u == 0)
+        return v;
+ 
+    if (v == 0)
+        return u;
+ 
+    // look for factors of 2
+    if (~u & 1) // u is even
+    {
+        if (v & 1) // v is odd
+            return gcd(u >> 1, v);
+        else // both u and v are even
+            return gcd(u >> 1, v >> 1) << 1;
+    }
+ 
+    if (~v & 1) // u is odd, v is even
+        return gcd(u, v >> 1);
+ 
+    // reduce larger argument
+    if (u > v)
+        return gcd((u - v) >> 1, v);
+ 
+    return gcd((v - u) >> 1, u);
+}
+
+
+
+//LONG gcd_ext(LONG u, LONG v, LONG *x0, LONG *y0) {
+//    LONG a, b;
+//    if (u >= v) {
+//        a = u;
+//        b = v;
+//    } else {
+//        a = v;
+//        b = u;
+//    }
+//    LONG x = a/b;
+//    LONG r = a - b * x;
+//    if (r == 0) {
+//        return b;
+//    } else {
+//        return gcd_ext(b, r, x0, y0);
+//    }
+//}
+
+
 LONG int_eq_count_divide(LONG *coeff, int ibg, int ied, LONG b) {
     if (ied > ibg + 1) {
         int imid = (ibg+ied) >> 1;
@@ -50,8 +103,7 @@ LONG int_eq_count_divide(LONG *coeff, int ibg, int ied, LONG b) {
         nsol += int_eq_count_divide(coeff, imid+1, ied, b);
         return nsol;
     } else if (ied == ibg + 1) {
-        LONG a1;
-        LONG a2;
+        LONG a1, a2;
         if (coeff[ibg] <= coeff[ied]) {
             a1 = coeff[ied];
             a2 = coeff[ibg];
@@ -70,11 +122,29 @@ LONG int_eq_count_divide(LONG *coeff, int ibg, int ied, LONG b) {
         if (a2 == 1) {
             return b/a1 + 1;
         }
-        LONG nsol = 0;
-        for (; b>=0; b-=a1) {
-            nsol += !(b%a2);
+        //
+        LONG g = gcd(a1, a2);
+        if (b%g) {
+            return 0;
         }
-        return nsol;
+        LONG x0, y0;
+        for (x0=0; x0<a2; x0++) {
+            if (!((a1 * x0 - g)%a2)) {
+                y0 = (a1 * x0 - g) / a2;
+                break;
+            }
+        }
+        if ((b*y0) % a1 == 0) {
+            return b*x0/a2 - b*y0/a1 + 1;
+        } else {
+            return b*x0/a2 - b*y0/a1;
+        }
+        //
+        //LONG nsol = 0;
+        //for (; b>=0; b-=a1) {
+        //    nsol += !(b%a2);
+        //}
+        //return nsol;
     } else if (ied == ibg) {
         return !(b%coeff[ibg]);
 #ifdef DEBUG

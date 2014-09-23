@@ -9,13 +9,6 @@
 //#define VERBOSE
 //#define CLOSE_PATH
 
-
-
-
-
-
-
-
 long int n_trials, nmoves, n_success;
 int *moves_x, *moves_y;
 int ix_s, iy_s;
@@ -25,7 +18,6 @@ class chess{
         int nx, ny;
         int npassed;
         int **passed;
-        chess(void);
         chess(int, int);
         chess(chess *);
         ~chess(void);
@@ -86,10 +78,6 @@ void rule_horse::set_next_steps(int ix, int iy){
 
 void rule_horse::reset(void){
   ichoice = 0;
-}
-
-
-chess::chess(void){
 }
 
 
@@ -372,8 +360,6 @@ int main(int argc, char *argv[]){
     //
     moves_x = new int[nmoves];
     moves_y = new int[nmoves];
-    //
-    chess *chesses = new chess[nmoves](bd_nx, bd_ny);
     //
     chess a_chess(bd_nx, bd_ny);
     if (!a_chess.is_valid_loc(ix0, iy0)) {
