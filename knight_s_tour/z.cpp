@@ -47,29 +47,26 @@ void do_chess(int *s, int nz, int nx, int ny, int ix, int iy, \
         s[ithis] = 1;
         //
         if (n_occ_next < nz) {
-            //
-            bool stop_try = false;
-            if ((8*n_occ_next > nz) && (n_occ_next < nz-1)) {
+            // Find out isolated island
+            if ((n_occ_next > 3) && (n_occ_next < nz-1)) {
                 int iiy = 0;
                 for (int i=0; i<nx; i++) {
                     for (int j=0; j<ny; j++) {
                         if (s[iiy + j] == 0) {
                             if (get_n_neib(s, nx, ny, i, j) == 0) {
-                                stop_try = true;
-                                break;
+                                goto step_back;
                             }
                         }
                     }
-                    if (stop_try) break;
                     iiy += ny;
                 }
             }
-            if (!stop_try) {
-                do_chess(s, nz, nx, ny, ix1, iy1, n_occ_next, n_success);
-            }
+            //
+            do_chess(s, nz, nx, ny, ix1, iy1, n_occ_next, n_success);
         } else {
             *n_success += 1;
         }
+step_back:
         s[ithis] = 0;
     }
 }
