@@ -29,7 +29,7 @@ void sorted(INT *nx, INT *ny, int *ind, int n1, int n2) {
     for (int i=n1; i<n2; i++) {
         if ((nx[i] < pvtx) || \
             ((nx[i] == pvtx) && (ny[i] < pvty))) {
-            idx ++;
+            idx++;
             swap(&nx[i], &nx[idx]);
             swap(&ny[i], &ny[idx]);
             swap(&ind[i], &ind[idx]);
@@ -43,20 +43,26 @@ void sorted(INT *nx, INT *ny, int *ind, int n1, int n2) {
     sorted(nx, ny, ind, idx+1, n2);
 }
 
-bool has_rect(INT *mx, INT *my, INT *nx, int *ny, int *ind, int n1, int n2) {
+bool has_rect(INT *mx, INT *my, INT *nx, INT *ny, int *ind, int n1, int n2) {
     if ((n1+3) > n2) {
         return false;
     }
+    int i0 = ind[n1];
     for (int i=n1+1; i<=n2; i++) {
+        if (mx[i] == mx[n1]) {
+            continue;
+        }
         if (my[i] != my[n1]) {
             return has_rect(mx, my, nx, ny, ind, i, n2);
         }
-        int i0 = ind[n1];
+        int j0 = ind[i];
         for (int j=i0; j<=n2; j++) {
+            if (ny[j] == ny[i0]) {
+                continue;
+            }
             if (nx[j] != nx[i0]) {
                 return has_rect(mx, my, nx, ny, ind, n1+1, n2);
             }
-            int j0 = ind[i];
             for (int k=j0; k<=n2; k++) {
                 if (nx[k] != nx[j0]) {
                     break;
@@ -84,7 +90,8 @@ int main(int argc, char *argv[]){
         return 1;
     }
     int np = n/2;
-    INT *nx, *ny, *mx, *my, *ind;
+    INT *nx, *ny, *mx, *my;
+    int *ind;
     nx = new INT[np];
     ny = new INT[np];
     mx = new INT[np];
@@ -110,6 +117,12 @@ int main(int argc, char *argv[]){
     //    printf("%d, %d\n", mx[i], my[i]);
     //}
     //
+    //printf("%p\n", (void *)nx[0]);
+    //printf("%p\n", (void *)nx);
+    //printf("%p\n", (void *)&nx);
+    //printf("%p\n", (void *)&nx[0]);
+    //printf("%p\n", (void *)nx[1]);
+    //printf("%p\n", (void *)&nx[1]);
     bool has_re = has_rect(mx, my, nx, ny, ind, 0, np-1);
     if (has_re) {
         printf("Yes\n");
