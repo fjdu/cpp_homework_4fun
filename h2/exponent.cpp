@@ -43,6 +43,12 @@ INT calc_last_4digit_list(INT *ns, int n1, int n2) {
 
 
 int main(int argc, char *argv[]){
+    //for (int k=1000; k<MODBASE; k++) {
+    //  if ((k*(k-1))%MODBASE == 0) {
+    //      printf("%d\n", k);
+    //  }
+    //}
+    //return 0;
     INT *ns;
     // http://stackoverflow.com/questions/1145831/get-list-of-numbers-from-stdin-and-tokenize-them
     string line = "";
