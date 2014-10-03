@@ -64,7 +64,7 @@ bool has_rect(INT *mx, INT *my, INT *nx, INT *ny, int *ind, int n1, int n2) {
                 return has_rect(mx, my, nx, ny, ind, n1+1, n2);
             }
             for (int k=j0; k<=n2; k++) {
-                if (nx[k] != nx[j0]) {
+                if ((nx[k] != nx[j0]) || (ny[k] > ny[j])) {
                     break;
                 } else if (ny[j] == ny[k]) {
                     return true;
