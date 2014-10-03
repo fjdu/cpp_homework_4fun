@@ -26,16 +26,24 @@ INT calc_max_sum(INT *ns, int n1, int n2) {
                 break;
             }
         }
-        t = 0;
-        for (j=i; j<=n2; j++) {
-            if (ns[j] <= 0) {
-                t += ns[j];
-            } else {
-                break;
+        if ((i<=n2) && (ns[i] < 0)) {
+            t = 0;
+            for (j=i; j<=n2; j++) {
+                if (ns[j] <= 0) {
+                    t += ns[j];
+                } else {
+                    break;
+                }
             }
+            if ((j<=n2) && (ns[j] > 0)) {
+                r = calc_max_sum(ns, j, n2);
+                return max(max(s, s+t+r), r);
+            } else {
+                return s;
+            }
+        } else {
+            return s;
         }
-        r = calc_max_sum(ns, j, n2);
-        return max(max(s, s+t+r), r);
     } else {
         INT s = ns[n1];
         int i;
@@ -51,6 +59,12 @@ INT calc_max_sum(INT *ns, int n1, int n2) {
 
 
 int main(int argc, char *argv[]){
+    //{
+    //    int i;
+    //    for (i=0; i<=2; i++) {if (i==2) break;};
+    //    printf("%d\n", i);
+    //    return 0;
+    //}
     INT *ns;
     string line = "";
     std::getline(std::cin, line, '\n');
