@@ -34,7 +34,7 @@ INT calc_last_4digit(INT a, INT n) {
 
 
 INT calc_last_4digit_list(INT *ns, int n1, int n2) {
-    INT r = ns[n1];
+    INT r = ns[n1]%MODBASE;
     for (int i=n1+1; i<=n2; i++) {
         r = calc_last_4digit(r, ns[i]);
     }
@@ -43,6 +43,23 @@ INT calc_last_4digit_list(INT *ns, int n1, int n2) {
 
 
 int main(int argc, char *argv[]){
+    //int s = 1;
+    //for (int i=1; i<1000000; i++) {
+    //    s = (s*2)%MODBASE;
+    //    if (s == 9376) {
+    //        printf("%d\n", i);
+    //        break;
+    //    }
+    //}
+    //s = 1;
+    //for (int i=1; i<1000000; i++) {
+    //    s = (s*3)%MODBASE;
+    //    if (s == 1) {
+    //        printf("%d\n", i);
+    //        break;
+    //    }
+    //}
+    //return 0;
     //for (int k=1000; k<MODBASE; k++) {
     //  if ((k*(k-1))%MODBASE == 0) {
     //      printf("%d\n", k);
