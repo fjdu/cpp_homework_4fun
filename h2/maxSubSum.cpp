@@ -11,47 +11,13 @@ using namespace std;
 
 //#define NAIVE
 
-INT partial_sum_L(INT *ns, int n1, int n2) {
-    INT s = ns[n2];
-    INT t = s;
-    for (int i=n2-1; i>=n1; i--) {
-        s += ns[i];
-        t = max(t, s);
+INT max_sum_Kadane(INT *ns, int n1, int n2) {
+    INT s=0, t=0;
+    for (int i=n1; i<=n2; i++) {
+        s = max(0, s + ns[i]);
+        t = max(s, t);
     }
     return t;
-}
-
-
-INT partial_sum_R(INT *ns, int n1, int n2) {
-    INT s = ns[n1];
-    INT t = s;
-    for (int i=n1+1; i<=n2; i++) {
-        s += ns[i];
-        t = max(t, s);
-    }
-    return t;
-}
-
-
-INT calc_max_sum_plus_minus(INT *ns, int n1, int n2) {
-    if (n1 >= n2) {
-        return ns[n2];
-    }
-    if (n1+1 == n2) {
-        return max(max(ns[n1], ns[n2]), ns[n1]+ns[n2]);
-    }
-    int nmid;
-    nmid = (n1 + n2) >> 1;
-    INT s1 = calc_max_sum_plus_minus(ns, n1, nmid-1);
-    INT s2 = calc_max_sum_plus_minus(ns, nmid+1, n2);
-    INT sL = partial_sum_L(ns, n1, nmid-1);
-    INT sR = partial_sum_R(ns, nmid+1, n2);
-    s1 = max(s1, s2);
-    s1 = max(s1, ns[nmid]);
-    s1 = max(s1, sL+ns[nmid]);
-    s1 = max(s1, sR+ns[nmid]);
-    s1 = max(s1, sL+sR+ns[nmid]);
-    return s1;
 }
 
 
@@ -108,7 +74,7 @@ int main(int argc, char *argv[]){
 #ifdef NAIVE
         printf("%d\n", calc_max_sum_enum(ns, 0, n-1));
 #else
-        printf("%d\n", calc_max_sum_plus_minus(ns, 0, n-1));
+        printf("%d\n", max_sum_Kadane(ns, 0, n-1));
 #endif
     }
 }
