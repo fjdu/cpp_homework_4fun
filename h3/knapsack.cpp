@@ -7,16 +7,21 @@
 
 using namespace std;
 
-#define NOT_YET_CALCULATED -1
-#define NO_SOLUTION -2
+#define NOT_YET_CALCULATED -999
+#define NO_SOLUTION -9999
 
 #define EXACT_MATCH
 
 int ks(int *v, int *w, int *s, int n, int W, int WL, int iL) {
+    if (iL < 0) {
+        return NO_SOLUTION;
+    }
     if (iL == 0) {
 #ifdef EXACT_MATCH
         if (w[0] == WL) {
             return v[0];
+        } else if (WL == 0) {
+            return 0;
         } else {
             return NO_SOLUTION;
         }
@@ -28,10 +33,7 @@ int ks(int *v, int *w, int *s, int n, int W, int WL, int iL) {
         }
 #endif
     }
-    if (WL < 1) {
-        return 0;
-    }
-    int idx = iL*W + WL - 1;
+    int idx = iL*(W+1) + WL;
     if (s[idx] != NOT_YET_CALCULATED) {
         return s[idx];
     }
@@ -48,6 +50,7 @@ int ks(int *v, int *w, int *s, int n, int W, int WL, int iL) {
     } else {
         s[idx] = ks(v, w, s, n, W, WL, iL-1);
     }
+    //printf("%d: %d, %d\n", iL, WL, s[idx]);
     return s[idx];
 }
 
@@ -97,9 +100,9 @@ int main(int argc, char *argv[]){
     //
     int n0 = values.size();
     int W = values[0], n = values[1];
-    if (n*2 != (n0-2)) {
-        return 1;
-    }
+    //if (n*2 != (n0-2)) {
+    //    return 1;
+    //}
     //printf("%d; %d\n", W, n);
     int *v, *w;
     v = new int[n];
@@ -119,8 +122,8 @@ int main(int argc, char *argv[]){
     }
     //
     int *s;
-    s = new int[n*W];
-    for (i=0; i<n*W; i++) {
+    s = new int[n*(W+1)];
+    for (i=0; i<n*(W+1); i++) {
         s[i] = NOT_YET_CALCULATED;
     }
     printf("%d\n", g*max(0, ks(v, w, s, n, W, W, n-1)));
