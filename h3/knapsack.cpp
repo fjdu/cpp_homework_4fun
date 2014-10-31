@@ -103,7 +103,6 @@ int main(int argc, char *argv[]){
     //if (n*2 != (n0-2)) {
     //    return 1;
     //}
-    //printf("%d; %d\n", W, n);
     int *v, *w;
     v = new int[n];
     w = new int[n];
