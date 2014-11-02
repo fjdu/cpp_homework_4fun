@@ -30,6 +30,8 @@ int count_align_enum(char *s1, char*s2, int ibg1, int ied1, int ibg2, int ied2, 
                     break;
                 }
             }
+            c = max(c, max(count_align_enum(s1, s2, i+1, ied1, j, ied2, t), \
+                           count_align_enum(s1, s2, i, ied1, j+1, ied2, t)));
             if (c > s) {
                 s = c;
             }

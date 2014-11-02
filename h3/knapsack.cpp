@@ -13,15 +13,13 @@ using namespace std;
 #define EXACT_MATCH
 
 int ks(int *v, int *w, int *s, int n, int W, int WL, int iL) {
-    if (iL < 0) {
-        return NO_SOLUTION;
+    if ((WL <= 0) || (iL < 0)) {
+        return 0;
     }
     if (iL == 0) {
 #ifdef EXACT_MATCH
         if (w[0] == WL) {
             return v[0];
-        } else if (WL == 0) {
-            return 0;
         } else {
             return NO_SOLUTION;
         }
@@ -110,8 +108,10 @@ int main(int argc, char *argv[]){
     for (i=0; i<n; i++) {
         v[i] = values[2+2*i];
         w[i] = values[2+2*i+1];
-        g = gcd(g, w[i]);
-        //printf("%d, %d\n", v[i], w[i]);
+        if (g > 1) {
+            g = gcd(g, w[i]);
+        }
+        //printf("%d: %d, %d\n", i+1, v[i], w[i]);
     }
     if (g > 1) {
         W /= g;
