@@ -125,6 +125,6 @@ int main(int argc, char *argv[]){
     for (i=0; i<n*(W+1); i++) {
         s[i] = NOT_YET_CALCULATED;
     }
-    printf("%d\n", g*max(0, ks(v, w, s, n, W, W, n-1)));
+    printf("%d\n", max(0, ks(v, w, s, n, W, W, n-1)));
     return 0;
 }
