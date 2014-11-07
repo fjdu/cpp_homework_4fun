@@ -26,6 +26,7 @@ void mul_col(int *a, int *b, int *c, int n) {
         for (int j=0; j<n; j++) {
             int idx = get_idx(i, j);
             c[i] += ((a[idx]%MODBASE) * (b[j]%MODBASE)) % MODBASE;
+            c[i] = c[i] % MODBASE;
         }
     }
 }
