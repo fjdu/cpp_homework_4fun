@@ -8,7 +8,6 @@
 using namespace std;
 
 void solve(int *b, int n) {
-    // c: result
     for (int i=n-2; i>=0; i--) {
         b[i+1] -= b[i];
     }
