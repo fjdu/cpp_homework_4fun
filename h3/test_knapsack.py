@@ -31,11 +31,18 @@ def cmp_knapsack( \
 
 
 
-for i in xrange(10000):
+nnzero = 0
+ntot = 10000
+
+for i in xrange(ntot):
     r1, r2, arg, v, w = cmp_knapsack(n=randint(1,10))
+    if r1.strip() != '0':
+        nnzero += 1
     #print '{:12s} {:12s}'.format(r1, r2)
     if (r1 != r2):
         print 'Error (mine vs LH): {:12s} {:12s}'.format(r1, r2)
         print '\t', arg
         for i in xrange(len(v)):
             print '\t\t', v[i], w[i]
+
+print float(nnzero) / float(ntot)
