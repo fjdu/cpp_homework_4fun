@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
-#define EPS 1e-10
+#define EPS 1e-12
 #define PI 3.141592653589793
 
 void inoutside_unit_circle(double x1, double y1, double x2, double y2, \
                            bool *is_outside, bool *is_inside, bool *contain_circ) {
-    double r11 = x1*x1 + y1*y1;
-    double r12 = x1*x1 + y2*y2;
-    double r21 = x2*x2 + y1*y1;
-    double r22 = x2*x2 + y2*y2;
+    double x11 = x1 * x1, x22 = x2 * x2;
+    double y11 = y1 * y1, y22 = y2 * y2;
+    double r11 = x11 + y11;
+    double r12 = x11 + y22;
+    double r21 = x22 + y11;
+    double r22 = x22 + y22;
     bool outside_1 = \
                   (r11 >  1.0) && \
                   (r12 >  1.0) && \
@@ -19,7 +22,7 @@ void inoutside_unit_circle(double x1, double y1, double x2, double y2, \
                   (r12 <= 1.0) && \
                   (r21 <= 1.0) && \
                   (r22 <= 1.0);
-    if (outside_1 && (!(*is_inside))) {
+    if (outside_1) {
         *contain_circ = \
             (x1 <= -1.0) && \
             (x2 >=  1.0) && \
@@ -27,10 +30,10 @@ void inoutside_unit_circle(double x1, double y1, double x2, double y2, \
             (y2 >=  1.0);
         *is_outside = \
             (!(*contain_circ)) && \
-            ((x1*x1 > 1.0) || (y1*y2 > 0.0)) && \
-            ((x2*x2 > 1.0) || (y1*y2 > 0.0)) && \
-            ((y1*y1 > 1.0) || (x1*x2 > 0.0)) && \
-            ((y2*y2 > 1.0) || (x1*x2 > 0.0));
+            ((x11 > 1.0) || (y1*y2 > 0.0)) && \
+            ((x22 > 1.0) || (y1*y2 > 0.0)) && \
+            ((y11 > 1.0) || (x1*x2 > 0.0)) && \
+            ((y22 > 1.0) || (x1*x2 > 0.0));
     } else {
         *contain_circ = false;
         *is_outside = false;
@@ -74,6 +77,7 @@ int main(int argc, char *argv[]){
     double x3 = atof(argv[5]) - x1;
     double y3 = atof(argv[6]) - y1;
     //
+    //printf("%.4f\n", round(cArea(x2, y2, x3, y3)*1e4)/1e4);
     printf("%.4f\n", cArea(x2, y2, x3, y3));
     return 0;
 }
