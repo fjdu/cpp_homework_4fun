@@ -121,6 +121,38 @@ bool intersect(float xL, float yL, float xR, float yR, \
 }
 
 
+void make_mask(bool *mask, int ndiv, float dy, \
+               float xL, float yminL, float ymaxL, \
+               float xR, float yminR, float ymaxR, \
+               float *x1, float *y1, float *x2, float *y2, int nseg) {
+    float yT, yB;
+    int iT, iB;
+    for (int i=0; i<nseg; i++) {
+        if (y1[i] > y2[i]) {
+            yT = ymaxR - (xR - xL) / (xR - x1[i]) * (ymaxR - y1[i]);
+            yB = yminR - (xR - xL) / (xR - x2[i]) * (yminR - y2[i]);
+        } else if (y1[i] < y2[i]) {
+            yT = ymaxR - (xR - xL) / (xR - x2[i]) * (ymaxR - y2[i]);
+            yB = yminR - (xR - xL) / (xR - x1[i]) * (yminR - y1[i]);
+        } else {
+            continue;
+        }
+        yB = clip(yB, yminL, ymaxL);
+        yT = clip(yT, yminL, ymaxL);
+        if (yT > yB) {
+            iB = (yB - yminL) / dy;
+            iT = (yT - yminL) / dy;
+            if (iT > ndiv) {
+                iT = ndiv;
+            }
+            for (int j=iB; j<=iT; j++) {
+                mask[j] = true;
+            }
+        }
+    }
+}
+
+
 int main(int argc, char *argv[]){
     string line = "";
     std::getline(std::cin, line, '\n');
@@ -158,12 +190,27 @@ int main(int argc, char *argv[]){
     float refy2[3] = {0.5, 0.75, 1.0};
     sort_segments(x1, y1, x2, y2, idx1, 0, nseg-1, refx1, refy1, 3);
     sort_segments(x1, y1, x2, y2, idx2, 0, nseg-1, refx2, refy2, 3);
+    //
     float dyL = 1.0 / ((float)NDIVL-1.0);
     float dyR = 1.0 / ((float)NDIVR-1.0);
+    //
+    bool *mask;
+    mask = new bool[NDIVL];
+    for (int i=0; i<NDIVL; i++) {
+        mask[i] = false;
+    }
+    make_mask(mask, NDIVL, dyL, \
+              0.0, 0.0, 1.0, \
+              1.0, 0.0, 1.0, \
+              x1, y1, x2, y2, nseg);
+    //
     float frac_max = 0.0, frac_acc;
     float yL = 0.0;
     idx = idx1;
     for (int i=0; i<NDIVL; i++) {
+        if (mask[i]) {
+            continue;
+        }
         float yR = 0.0;
         frac_acc = 0.0;
         if (yL > 0.5) {
