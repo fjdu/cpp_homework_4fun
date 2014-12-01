@@ -28,7 +28,7 @@ void swap_seg(float *x1, float *y1, float *x2, float *y2, \
 }
 
 
-void swap_seg_idx(int *idx, int i1, int i2) {
+inline void swap_seg_idx(int *idx, int i1, int i2) {
     int tmp = idx[i1];
     idx[i1] = idx[i2];
     idx[i2] = tmp;
@@ -62,11 +62,12 @@ float get_view_fraction(float px, float py, float x0, float ymin, float ymax, \
 
 
 float get_cmp_val(float *x1, float *y1, float *x2, float *y2, \
-            int i1, float *refx, float *refy, int nref) {
+                  int i1, float *refx, float *refy, int nref) {
     float ftot1 = 0.0;
     for (int i=0; i<nref; i++) {
         ftot1 += get_view_fraction(refx[i], refy[i], \
-            X_0_WALL, YMIN_WALL, YMAX_WALL, x1[i1], y1[i1], x2[i1], y2[i1]);
+                                   X_0_WALL, YMIN_WALL, YMAX_WALL, \
+                                   x1[i1], y1[i1], x2[i1], y2[i1]);
     }
     return ftot1;
 }
@@ -101,10 +102,8 @@ void sort_segments(float *x1, float *y1, float *x2, float *y2, \
 
 inline bool intersect_2seg(float xL, float yL, float xR, float yR, \
                     float x1, float y1, float x2, float y2) {
-    float u = ((x1 - xL) * (y2 - y1) - (y1 - yL) * (x2 - x1)) / \
-              ((xR - xL) * (y2 - y1) - (yR - yL) * (x2 - x1));
-    float v = ((x1 - xL) * (yR - yL) - (y1 - yL) * (xR - xL)) / \
-              ((xR - xL) * (y2 - y1) - (yR - yL) * (x2 - x1));
+    float u = ((x1 - xL) * (y2 - y1) - (y1 - yL) * (x2 - x1)) / ((xR - xL) * (y2 - y1) - (yR - yL) * (x2 - x1));
+    float v = ((x1 - xL) * (yR - yL) - (y1 - yL) * (xR - xL)) / ((xR - xL) * (y2 - y1) - (yR - yL) * (x2 - x1));
     return (0.0 <= u) && (u <= 1.0) && \
            (0.0 <= v) && (v <= 1.0);
 }
@@ -120,12 +119,6 @@ bool intersect(float xL, float yL, float xR, float yR, \
     }
     return false;
 }
-
-
-//float get_seeable(float yL, float yR1, float yR2, float *x1, float *y1, float *x2, float *y2, int *idx, int nseg) {
-//    float yM = 0.5 * (yR1 + yR2);
-//    get_seeable(yL, yR1, yM, x1, y1, x2, y2, idx, nseg) + 
-//}
 
 
 int main(int argc, char *argv[]){
@@ -175,10 +168,16 @@ int main(int argc, char *argv[]){
             } else {
                 frac_acc += dyR;
             }
+            if ((1.0 - yR + frac_acc) <= frac_max) {
+                break;
+            }
             yR += dyR;
         }
         if (frac_acc > frac_max) {
             frac_max = frac_acc;
+        }
+        if (frac_max > 0.999) {
+            break;
         }
         yL += dyL;
     }
