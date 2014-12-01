@@ -14,18 +14,70 @@
 using namespace std;
 
 
-void swap_seg(float *x1, float *y1, float *x2, float *y2, \
-              int i1, int i2) {
-    float tx1 = x1[i1], tx2 = x2[i1], ty1 = y1[i1], ty2 = y2[i1];
-    x1[i1] = x1[i2];
-    y1[i1] = y1[i2];
-    x2[i1] = x2[i2];
-    y2[i1] = y2[i2];
-    x1[i2] = tx1;
-    y1[i2] = ty1;
-    x2[i2] = tx2;
-    y2[i2] = ty2;
+typedef struct interval {
+    float vL, vR;
+    struct interval *left, *right;
+} interval;
+
+
+void add_to_interval(interval *itv, float xmin, float xmax) {
+    if (xmax < xmin) {
+        return;
+    }
+    if ((xmin >= itv->vL) && (xmin <= itv->vR)) {
+        if ((xmax >= itv->vL) && (xmax <= itv->vR)) {
+            //  (       )
+            //     ( )
+            return;
+        } else {
+            //  (       )
+            //     (       )
+            itv->vR = xmax;
+            //TODO
+        }
+    } else if (xmin > itv->vR) {
+        //  (       )
+        //             (    )
+        if (itv->right != NULL) {
+            add_to_interval(itv->right, xmin, xmax);
+        } else {
+            itv->right = new interval;
+            itv->right->left = itv;
+            itv->right->right = NULL;
+            itv->right->vL = xmin;
+            itv->right->vR = xmax;
+        }
+    } else if (xmax < itv->vL) {
+        //         (       )
+        //  (   )
+        if (itv->left != NULL) {
+            add_to_interval(itv->left, xmin, xmax);
+        } else {
+            itv->left = new interval;
+            itv->left->right = itv;
+            itv->left->left = NULL;
+            itv->left->vL = xmin;
+            itv->left->vR = xmax;
+        }
+    } else if ((xmax >= itv->vL) && (xmax <= itv->vR)) {
+        //         (       )
+        //  (         )
+        itv->vL = xmin;
+        //TODO
+    } else if (xmax > itv->vR) {
+        //         (       )
+        //  (                    )
+        itv->vL = xmin;
+        itv->vR = xmax;
+        //TODO
+    }
 }
+
+
+void cleanup_interval(interval *itv) {
+    //itv->right->\s
+}
+
 
 
 inline void swap_seg_idx(int *idx, int i1, int i2) {
@@ -139,9 +191,11 @@ void make_mask(bool *mask, int ndiv, float dy, \
         }
         yB = clip(yB, yminL, ymaxL);
         yT = clip(yT, yminL, ymaxL);
+        //printf("%.4f, %.4f\n", yB, yT);
         if (yT > yB) {
             iB = (yB - yminL) / dy;
             iT = (yT - yminL) / dy;
+            //printf("%d, %d, %d\n", iB, iT, ndiv);
             if (iT > ndiv) {
                 iT = ndiv;
             }
@@ -184,6 +238,8 @@ int main(int argc, char *argv[]){
         //printf("(%.4f, %.4f)  to  (%.4f, %.4f) \n", x1[i], y1[i], x2[i], y2[i]);
     }
     //
+    bool *mask;
+    //
     float refx1[3] = {0.0, 0.0,  0.0};
     float refy1[3] = {0.0, 0.25, 0.5};
     float refx2[3] = {0.0, 0.0,  0.0};
@@ -194,7 +250,6 @@ int main(int argc, char *argv[]){
     float dyL = 1.0 / ((float)NDIVL-1.0);
     float dyR = 1.0 / ((float)NDIVR-1.0);
     //
-    bool *mask;
     mask = new bool[NDIVL];
     for (int i=0; i<NDIVL; i++) {
         mask[i] = false;
@@ -208,39 +263,32 @@ int main(int argc, char *argv[]){
     float yL = 0.0;
     idx = idx1;
     for (int i=0; i<NDIVL; i++) {
-        if (mask[i]) {
-            continue;
-        }
-        float yR = 0.0;
-        frac_acc = 0.0;
-        if (yL > 0.5) {
-            idx = idx2;
-        }
-        for (int j=0; j<NDIVR; j++) {
-            if (intersect(0.0, yL, 1.0, yR, x1, y1, x2, y2, idx, nseg)) {
-                frac_acc = 0.0;
-            } else {
-                frac_acc += dyR;
+        if (!mask[i]) {
+            float yR = 0.0;
+            frac_acc = 0.0;
+            if (yL > 0.5) {
+                idx = idx2;
             }
-            if ((1.0 - yR + frac_acc) <= frac_max) {
+            for (int j=0; j<NDIVR; j++) {
+                if (intersect(0.0, yL, 1.0, yR, x1, y1, x2, y2, idx, nseg)) {
+                    frac_acc = 0.0;
+                } else {
+                    frac_acc += dyR;
+                }
+                if ((1.0 - yR + frac_acc) <= frac_max) {
+                    break;
+                }
+                yR += dyR;
+            }
+            if (frac_acc > frac_max) {
+                frac_max = frac_acc;
+            }
+            if (frac_max > 0.999) {
                 break;
             }
-            yR += dyR;
-        }
-        if (frac_acc > frac_max) {
-            frac_max = frac_acc;
-        }
-        if (frac_max > 0.999) {
-            break;
         }
         yL += dyL;
     }
     printf("%.3f\n", frac_max);
-    //for (int i=0; i<nseg; i++) {
-    //    printf("%5d, %5d: (%.4f, %.4f)  to  (%.4f, %.4f): %.8f \n", \
-    //           i, idx[i], x1[idx[i]], y1[idx[i]], x2[idx[i]], y2[idx[i]], \
-    //           get_view_fraction(refx[0], refy[0], X_0_WALL, YMIN_WALL, YMAX_WALL, \
-    //                             x1[idx[i]], y1[idx[i]], x2[idx[i]], y2[idx[i]]));
-    //}
     return 0;
 }
