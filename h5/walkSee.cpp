@@ -135,33 +135,40 @@ int main(int argc, char *argv[]){
     }
     int nseg = values.size() / 4;
     float *x1, *y1, *x2, *y2;
-    int *idx;
+    int *idx1, *idx2, *idx;
     x1 = new float[nseg];
     y1 = new float[nseg];
     x2 = new float[nseg];
     y2 = new float[nseg];
-    idx = new int[nseg];
+    idx1 = new int[nseg];
+    idx2 = new int[nseg];
     for (int i=0; i<nseg; i++) {
         x1[i] = values[4*i];
         y1[i] = values[4*i+1];
         x2[i] = values[4*i+2];
         y2[i] = values[4*i+3];
-        idx[i] = i;
+        idx1[i] = i;
+        idx2[i] = i;
         //printf("(%.4f, %.4f)  to  (%.4f, %.4f) \n", x1[i], y1[i], x2[i], y2[i]);
     }
     //
-    float refx[3] = {0.0, 0.0, 0.0};
-    float refy[3] = {0.0, 0.5, 1.0};
-    //float refx[1] = {0.0};
-    //float refy[1] = {0.0};
-    sort_segments(x1, y1, x2, y2, idx, 0, nseg-1, refx, refy, 3);
+    float refx1[3] = {0.0, 0.0,  0.0};
+    float refy1[3] = {0.0, 0.25, 0.5};
+    float refx2[3] = {0.0, 0.0,  0.0};
+    float refy2[3] = {0.5, 0.75, 1.0};
+    sort_segments(x1, y1, x2, y2, idx1, 0, nseg-1, refx1, refy1, 3);
+    sort_segments(x1, y1, x2, y2, idx2, 0, nseg-1, refx2, refy2, 3);
     float dyL = 1.0 / ((float)NDIVL-1.0);
     float dyR = 1.0 / ((float)NDIVR-1.0);
     float frac_max = 0.0, frac_acc;
     float yL = 0.0;
+    idx = idx1;
     for (int i=0; i<NDIVL; i++) {
         float yR = 0.0;
         frac_acc = 0.0;
+        if (yL > 0.5) {
+            idx = idx2;
+        }
         for (int j=0; j<NDIVR; j++) {
             if (intersect(0.0, yL, 1.0, yR, x1, y1, x2, y2, idx, nseg)) {
                 frac_acc = 0.0;
