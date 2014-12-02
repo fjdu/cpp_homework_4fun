@@ -9,12 +9,14 @@
 #define YMIN_WALL 0.0
 #define YMAX_WALL 1.0
 #define NDIVL 5000
-#define NDIVR 5000
+#define NDIVR 10000
 
-#define USE_INTERVAL
+//#define RAY_CROSSING
 
 using namespace std;
 
+
+// Method 1: chain-of-intervals
 
 typedef struct interval {
     float vL, vR;
@@ -58,7 +60,6 @@ void cleanup_interval_rightward(interval **itv) {
         }
     }
 }
-
 
 
 void cleanup_interval_leftward(interval **itv) {
@@ -323,6 +324,8 @@ float sumup_interval(interval *itv) {
 }
 
 
+// Method 2: ray-crossing
+
 
 inline void swap_seg_idx(int *idx, int i1, int i2) {
     int tmp = idx[i1];
@@ -405,6 +408,7 @@ int partition(float *x1, float *y1, float *x2, float *y2, \
 void sort_segments(float *x1, float *y1, float *x2, float *y2, \
                    int *idx, int i1, int i2, \
                    float *refx, float *refy, int nref) {
+    // Quicksort
     if (i1 < i2) {
         int p = partition(x1, y1, x2, y2, idx, i1, i2, refx, refy, nref);
         sort_segments(x1, y1, x2, y2, idx, i1, p-1, refx, refy, nref);
@@ -438,6 +442,7 @@ void make_mask(bool *mask, int ndiv, float dy, \
                float xL, float yminL, float ymaxL, \
                float xR, float yminR, float ymaxR, \
                float *x1, float *y1, float *x2, float *y2, int nseg) {
+    // Mask out the completely blocked region
     float yT, yB;
     int iT, iB;
     for (int i=0; i<nseg; i++) {
@@ -452,11 +457,9 @@ void make_mask(bool *mask, int ndiv, float dy, \
         }
         yB = clip(yB, yminL, ymaxL);
         yT = clip(yT, yminL, ymaxL);
-        //printf("%.4f, %.4f\n", yB, yT);
         if (yT > yB) {
             iB = (yB - yminL) / dy;
             iT = (yT - yminL) / dy;
-            //printf("%d, %d, %d\n", iB, iT, ndiv);
             if (iT > ndiv) {
                 iT = ndiv;
             }
@@ -501,13 +504,6 @@ int main(int argc, char *argv[]){
     //
     bool *mask;
     //
-    float refx1[3] = {0.0, 0.0,  0.0};
-    float refy1[3] = {0.0, 0.25, 0.5};
-    float refx2[3] = {0.0, 0.0,  0.0};
-    float refy2[3] = {0.5, 0.75, 1.0};
-    sort_segments(x1, y1, x2, y2, idx1, 0, nseg-1, refx1, refy1, 3);
-    sort_segments(x1, y1, x2, y2, idx2, 0, nseg-1, refx2, refy2, 3);
-    //
     float dyL = 1.0 / ((float)NDIVL-1.0);
     float dyR = 1.0 / ((float)NDIVR-1.0);
     //
@@ -522,7 +518,17 @@ int main(int argc, char *argv[]){
     //
     float frac_max = 0.0, frac_acc;
     float yL = 0.0;
-#ifndef USE_INTERVAL
+/*
+Ray-crossing
+*/
+#ifdef RAY_CROSSING
+    float refx1[3] = {0.0, 0.0,  0.0};
+    float refy1[3] = {0.0, 0.25, 0.5};
+    float refx2[3] = {0.0, 0.0,  0.0};
+    float refy2[3] = {0.5, 0.75, 1.0};
+    sort_segments(x1, y1, x2, y2, idx1, 0, nseg-1, refx1, refy1, 3);
+    sort_segments(x1, y1, x2, y2, idx2, 0, nseg-1, refx2, refy2, 3);
+    //
     idx = idx1;
     for (int i=0; i<NDIVL; i++) {
         if (!mask[i]) {
@@ -551,6 +557,9 @@ int main(int argc, char *argv[]){
         }
         yL += dyL;
     }
+/*
+Chain of intervals
+*/
 #else
     interval *itv;
     float itvvL, itvvR;
@@ -567,15 +576,6 @@ int main(int argc, char *argv[]){
                 if ((itv == NULL) && (itvvL < itvvR)) {
                     //printf("Wrong: %f, %f\n", itvvL, itvvR);
                 }
-                //if (itv != NULL) {
-                //    //printf("\t%.3f, %.3f, %.3f, %.3f\n", \
-                //        itv->vL, itv->vR, itvvL, itvvR);
-                //}
-                //printf("BBB\n");
-                //if (itv != NULL) {
-                //  //printf("%.3f, %.3f, %.3f, %.3f, %.3f\n", \
-                //      yL, itvvL, itvvR, itv->vL, itv->vR);
-                //}
             }
             float summed = sumup_interval(itv);
             frac_acc = 1.0 - summed;
