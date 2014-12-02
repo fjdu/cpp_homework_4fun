@@ -11,7 +11,7 @@
 #define NDIVL 5000
 #define NDIVR 5000
 
-//#define USE_INTERVAL
+#define USE_INTERVAL
 
 using namespace std;
 
@@ -22,58 +22,86 @@ typedef struct interval {
 } interval;
 
 
-void cleanup_interval_rightward(interval *itv) {
-    if (itv->right == NULL) {
+void cleanup_interval_rightward(interval **itv) {
+    if ((*itv)->right == NULL) {
         return;
     }
-    if (itv->right->vL > itv->vR) {
+    if ((*itv)->right->vL > (*itv)->vR) {
         //         (   )
         //  (   )
         return;
-    } else if (itv->right->vR >= itv->vR) {
+    } else if ((*itv)->right->vR >= (*itv)->vR) {
         //      (     )
         //  (      )
-        itv->vR = itv->right->vR;
-        itv->right = itv->right->right;
-        delete itv->right;
+        //printf("000\n");
+        (*itv)->vR = (*itv)->right->vR;
+        interval *tmp;
+        tmp = (*itv)->right->right;
+        delete (*itv)->right;
+        (*itv)->right = NULL;
+        if (tmp != NULL) {
+            tmp->left = (*itv);
+            (*itv)->right = tmp;
+        }
     } else {
         //     (    )
         //  (          )
-        itv->right = itv->right->right;
-        delete itv->right;
-        cleanup_interval_rightward(itv);
+        //printf("111\n");
+        interval *tmp;
+        tmp = (*itv)->right->right;
+        delete (*itv)->right;
+        (*itv)->right = NULL;
+        if (tmp != NULL) {
+            (*itv)->right = tmp;
+            tmp->left = (*itv);
+            cleanup_interval_rightward(itv);
+        }
     }
 }
 
 
 
-void cleanup_interval_leftward(interval *itv) {
-    if (itv->left == NULL) {
+void cleanup_interval_leftward(interval **itv) {
+    if ((*itv)->left == NULL) {
         return;
     }
-    if (itv->left->vR < itv->vL) {
+    if ((*itv)->left->vR < (*itv)->vL) {
         //  (  )
         //        (   )
         return;
-    } else if (itv->left->vL <= itv->vL) {
+    } else if ((*itv)->left->vL <= (*itv)->vL) {
         //  (     )
         //     (      )
-        itv->vL = itv->left->vL;
-        itv->left = itv->left->left;
-        delete itv->left;
+        //printf("222\n");
+        (*itv)->vL = (*itv)->left->vL;
+        interval *tmp;
+        tmp = (*itv)->left->left;
+        delete (*itv)->left;
+        (*itv)->left = NULL;
+        if (tmp != NULL) {
+            (*itv)->left = tmp;
+            tmp->right = (*itv);
+        }
     } else {
         //     (    )
         //  (          )
-        itv->left = itv->left->left;
-        delete itv->left;
-        cleanup_interval_leftward(itv);
+        //printf("333\n");
+        interval *tmp;
+        tmp = (*itv)->left->left;
+        delete (*itv)->left;
+        (*itv)->left = NULL;
+        if (tmp != NULL) {
+            (*itv)->left = tmp;
+            tmp->right = (*itv);
+            cleanup_interval_leftward(itv);
+        }
     }
 }
 
 
 void add_to_interval_right(interval **itv, float xmin, float xmax) {
     if (xmax < (*itv)->vL) {
-        printf("OOO\n");
+        //printf("OOO\n");
         interval *tmp;
         tmp = new interval;
         tmp->vL = xmin;
@@ -81,28 +109,32 @@ void add_to_interval_right(interval **itv, float xmin, float xmax) {
         tmp->left = (*itv)->left;
         tmp->right = (*itv);
         (*itv)->left = tmp;
+        tmp->left->right = tmp;
         return;
     } else if ((xmax >= (*itv)->vL) && (xmax <= (*itv)->vR)) {
-        printf("PPP\n");
+        //printf("PPP\n");
         if (xmin < (*itv)->vL) {
             (*itv)->vL = xmin;
         }
     } else if (xmin < (*itv)->vL) {
-        printf("LLL\n");
+        //printf("LLL\n");
         (*itv)->vL = xmin;
         (*itv)->vR = xmax;
-        cleanup_interval_rightward(*itv);
+        cleanup_interval_rightward(itv);
     } else if ((xmin >= (*itv)->vL) && (xmin <= (*itv)->vR)) {
-        printf("MMM\n");
+        //printf("MMM\n");
         (*itv)->vR = xmax;
-        cleanup_interval_rightward(*itv);
+        cleanup_interval_rightward(itv);
     } else {
-        printf("NNN\n");
+        //printf("NNN\n");
         if ((*itv)->right != NULL) {
-            printf("III, %f, %f, %f, %f\n", (*itv)->right->vL, (*itv)->right->vR, xmin, xmax);
+            //printf("III, %f, %f, %f, %f\n", (*itv)->right->vL, (*itv)->right->vR, xmin, xmax);
+            //if ((*itv)->right->right != NULL) {
+            //  //printf("iii, %f, %f, %f, %f\n", (*itv)->right->right->vL, (*itv)->right->right->vR, xmin, xmax);
+            //}
             add_to_interval_right(&((*itv)->right), xmin, xmax);
         } else {
-            printf("JJJ\n");
+            //printf("JJJ\n");
             (*itv)->right = new interval;
             (*itv)->right->vL = xmin;
             (*itv)->right->vR = xmax;
@@ -122,6 +154,7 @@ void add_to_interval_left(interval **itv, float xmin, float xmax) {
         tmp->right = (*itv)->right;
         tmp->left = (*itv);
         (*itv)->right = tmp;
+        tmp->right->left = tmp;
         return;
     } else if ((xmin >= (*itv)->vL) && (xmin <= (*itv)->vR)) {
         if (xmax > (*itv)->vR) {
@@ -130,10 +163,10 @@ void add_to_interval_left(interval **itv, float xmin, float xmax) {
     } else if (xmax > (*itv)->vR) {
         (*itv)->vL = xmin;
         (*itv)->vR = xmax;
-        cleanup_interval_leftward(*itv);
+        cleanup_interval_leftward(itv);
     } else if ((xmax >= (*itv)->vL) && (xmax <= (*itv)->vR)) {
         (*itv)->vL = xmin;
-        cleanup_interval_leftward(*itv);
+        cleanup_interval_leftward(itv);
     } else {
         if ((*itv)->left != NULL) {
             add_to_interval_left(&((*itv)->left), xmin, xmax);
@@ -160,8 +193,9 @@ void add_to_interval(interval **itv, float xmin, float xmax) {
         (*itv)->right = NULL;
         return;
     }
+    //printf("vL,vR;xmin,xmax: %.3f, %.3f; %.3f, %.3f\n", (*itv)->vL, (*itv)->vR, xmin, xmax);
     if ((xmin >= (*itv)->vL) && (xmin <= (*itv)->vR)) {
-        printf("000\n");
+        //printf("000\n");
         if ((xmax >= (*itv)->vL) && (xmax <= (*itv)->vR)) {
             //  (       )
             //     ( )
@@ -170,14 +204,14 @@ void add_to_interval(interval **itv, float xmin, float xmax) {
             //  (       )
             //     (       )
             (*itv)->vR = xmax;
-            cleanup_interval_rightward(*itv);
+            cleanup_interval_rightward(itv);
         }
     } else if (xmin > (*itv)->vR) {
         //  (       )
         //             (    )
-        printf("111\n");
+        //printf("111\n");
         if ((*itv)->right != NULL) {
-            printf("QQQ\n");
+            //printf("QQQ\n");
             add_to_interval_right(&((*itv)->right), xmin, xmax);
         } else {
             (*itv)->right = new interval;
@@ -189,7 +223,7 @@ void add_to_interval(interval **itv, float xmin, float xmax) {
     } else if (xmax < (*itv)->vL) {
         //         (       )
         //  (   )
-        printf("222\n");
+        //printf("222\n");
         if ((*itv)->left != NULL) {
             //printf("PPP\n");
             add_to_interval_left(&((*itv)->left), xmin, xmax);
@@ -203,17 +237,17 @@ void add_to_interval(interval **itv, float xmin, float xmax) {
     } else if ((xmax >= (*itv)->vL) && (xmax <= (*itv)->vR)) {
         //         (       )
         //  (         )
-        printf("333\n");
+        //printf("333\n");
         (*itv)->vL = xmin;
-        cleanup_interval_leftward(*itv);
+        cleanup_interval_leftward(itv);
     } else if (xmax > (*itv)->vR) {
         //         (       )
         //  (                    )
-        printf("444\n");
+        //printf("444\n");
         (*itv)->vL = xmin;
         (*itv)->vR = xmax;
-        cleanup_interval_rightward(*itv);
-        cleanup_interval_leftward(*itv);
+        cleanup_interval_rightward(itv);
+        cleanup_interval_leftward(itv);
     }
 }
 
@@ -259,6 +293,7 @@ float sumup_interval_leftward(interval *itv) {
     if (itv == NULL) {
         return 0.0;
     } else {
+        //printf("\tL: vL,vR = %.3f, %.3f\n", itv->vL, itv->vR);
         return (itv->vR - itv->vL) + \
                sumup_interval_leftward(itv->left);
     }
@@ -269,6 +304,7 @@ float sumup_interval_rightward(interval *itv) {
     if (itv == NULL) {
         return 0.0;
     } else {
+        //printf("\tR: vL,vR = %.3f, %.3f\n", itv->vL, itv->vR);
         return (itv->vR - itv->vL) + \
                sumup_interval_rightward(itv->right);
     }
@@ -279,6 +315,7 @@ float sumup_interval(interval *itv) {
     if (itv == NULL) {
         return 0.0;
     } else {
+        //printf("\tC: vL,vR = %.3f, %.3f\n", itv->vL, itv->vR);
         return (itv->vR - itv->vL) + \
                sumup_interval_leftward(itv->left) + \
                sumup_interval_rightward(itv->right);
@@ -519,33 +556,36 @@ int main(int argc, char *argv[]){
     float itvvL, itvvR;
     itv = NULL;
     for (int i=0; i<NDIVL; i++) {
-        printf("i = %d\n", i);
+        //printf("i = %d\n", i);
         if (!mask[i]) {
             for (int j=0; j<nseg; j++) {
                 get_view_interval(0.0, yL, 1.0, 0.0, 1.0, \
                                   x1[j], y1[j], x2[j], y2[j], \
                                   &itvvL, &itvvR);
-                if (itv != NULL) {
-                    printf("\t%.3f, %.3f, %.3f, %.3f\n", \
-                        itv->vL, itv->vR, itvvL, itvvR);
-                }
-                printf("AAA\n");
+                //printf("AAA\n");
                 add_to_interval(&itv, itvvL, itvvR);
-                printf("BBB\n");
+                if ((itv == NULL) && (itvvL < itvvR)) {
+                    //printf("Wrong: %f, %f\n", itvvL, itvvR);
+                }
                 //if (itv != NULL) {
-                //  printf("%.3f, %.3f, %.3f, %.3f, %.3f\n", \
+                //    //printf("\t%.3f, %.3f, %.3f, %.3f\n", \
+                //        itv->vL, itv->vR, itvvL, itvvR);
+                //}
+                //printf("BBB\n");
+                //if (itv != NULL) {
+                //  //printf("%.3f, %.3f, %.3f, %.3f, %.3f\n", \
                 //      yL, itvvL, itvvR, itv->vL, itv->vR);
                 //}
             }
-            frac_acc = 1.0 - sumup_interval(itv);
-            //printf("%.3f\n", sumup_interval(itv));
+            float summed = sumup_interval(itv);
+            frac_acc = 1.0 - summed;
+            //printf("%.3f\n", frac_acc);
             if (frac_acc > frac_max) {
                 frac_max = frac_acc;
             }
         }
         destroy_interval(&itv);
         yL += dyL;
-        printf("CCC\n");
     }
 #endif
     printf("%.3f\n", frac_max);

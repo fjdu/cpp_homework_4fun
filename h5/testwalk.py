@@ -35,6 +35,8 @@ def cmp_walk(nseg=1000, lenseg = 0.3):
 ntot = 10
 
 for i in xrange(ntot):
-    p, s, t = cmp_walk(nseg=100, lenseg=0.03)
+    p, s, t = cmp_walk(nseg=100, lenseg=0.07)
     print p.replace('\n', ''), '\t', t, ' s'
+    print
     print s
+    print
