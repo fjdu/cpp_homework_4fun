@@ -1,9 +1,11 @@
-from numpy.random import random
+from numpy.random import seed, random
 from subprocess import Popen, PIPE
 import time
 from numpy import sin, cos
 
-def cmp_walk(nseg=1000, lenseg = 0.3):
+def cmp_walk(nseg=1000, lenseg = 0.3, seed_val=None):
+    if seed_val != None:
+        seed(seed_val)
     xc = random(nseg)
     yc = random(nseg)
     le = random(nseg) * lenseg
@@ -35,8 +37,9 @@ def cmp_walk(nseg=1000, lenseg = 0.3):
 ntot = 10
 
 for i in xrange(ntot):
-    p, s, t = cmp_walk(nseg=5000, lenseg=0.001)
-    print p.replace('\n', ''), '\t', t, ' s'
-    #print
-    #print s
-    #print
+    p, s, t = cmp_walk(nseg=500, lenseg=0.003, seed_val=37*i+123456)
+    p = p.replace('\n', '')
+    if p == '':
+        with open('xxx', 'w') as f:
+            f.write(s)
+    print p, '\t', t, ' s'

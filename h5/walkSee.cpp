@@ -5,13 +5,13 @@
 #include <vector>
 #include <string>
 
+
 #define X_0_WALL 1.0
 #define YMIN_WALL 0.0
 #define YMAX_WALL 1.0
-#define NDIVL 5000
+#define NDIVL 10000
 #define NDIVR 10000
 
-//#define RAY_CROSSING
 
 using namespace std;
 
@@ -24,11 +24,10 @@ typedef struct interval {
 } interval;
 
 
-interval *go_to_head(interval *itv) {
-    if (itv->left == NULL) {
-        return itv;
-    } else {
-        return go_to_head(itv->left);
+void go_to_head(interval **itv) {
+    if ((*itv)->left != NULL) {
+        (*itv) = (*itv)->left;
+        go_to_head(itv);
     }
 }
 
@@ -468,26 +467,23 @@ void make_mask(bool *mask, int ndiv, float dy, \
         }
         yB = clip(yB, yminL, ymaxL);
         yT = clip(yT, yminL, ymaxL);
-        add_to_interval(&itv_mask, yB, yT);
-        //if (yT > yB) {
-        //    iB = (yB - yminL) / dy;
-        //    iT = (yT - yminL) / dy;
-        //    if (iT > ndiv) {
-        //        iT = ndiv;
-        //    }
-        //    for (int j=iB; j<=iT; j++) {
-        //        mask[j] = true;
-        //    }
-        //}
+        if (!((yB != yB) || (yT != yT))) {
+            add_to_interval(&itv_mask, yB, yT);
+        }
     }
-    itv_mask = go_to_head(itv_mask);
+    if (itv_mask != NULL) {
+        go_to_head(&itv_mask);
+    }
     while (itv_mask != NULL) {
         yB = itv_mask->vL;
         yT = itv_mask->vR;
         iB = (yB - yminL) / dy;
         iT = (yT - yminL) / dy;
-        if (iT > ndiv) {
-            iT = ndiv;
+        if (iB < 0) {
+            iB = 0;
+        }
+        if (iT > ndiv-1) {
+            iT = ndiv-1;
         }
         for (int j=iB; j<=iT; j++) {
             mask[j] = true;
@@ -519,6 +515,8 @@ int main(int argc, char *argv[]){
     y2 = new float[nseg];
     idx1 = new int[nseg];
     idx2 = new int[nseg];
+    float ave_len=0.0;
+    int ave_nseg_cross;
     for (int i=0; i<nseg; i++) {
         x1[i] = values[4*i];
         y1[i] = values[4*i+1];
@@ -526,8 +524,12 @@ int main(int argc, char *argv[]){
         y2[i] = values[4*i+3];
         idx1[i] = i;
         idx2[i] = i;
-        //printf("(%.4f, %.4f)  to  (%.4f, %.4f) \n", x1[i], y1[i], x2[i], y2[i]);
+        ave_len += (y2[i] >= y1[i]) ? (y2[i] - y1[i]) : (y1[i] - y2[i]);
+        //printf("%5d of %5d: (%.4f, %.4f) to (%.4f, %.4f) \n", \
+        //       i+1, nseg, x1[i], y1[i], x2[i], y2[i]);
     }
+    ave_len /= (float)nseg;
+    ave_nseg_cross = 1.0/ave_len + 1;
     //
     bool *mask;
     //
@@ -545,76 +547,72 @@ int main(int argc, char *argv[]){
     //
     float frac_max = 0.0, frac_acc;
     float yL = 0.0;
-/*
-Ray-crossing
-*/
-#ifdef RAY_CROSSING
-    float refx1[3] = {0.0, 0.0,  0.0};
-    float refy1[3] = {0.0, 0.25, 0.5};
-    float refx2[3] = {0.0, 0.0,  0.0};
-    float refy2[3] = {0.5, 0.75, 1.0};
-    sort_segments(x1, y1, x2, y2, idx1, 0, nseg-1, refx1, refy1, 3);
-    sort_segments(x1, y1, x2, y2, idx2, 0, nseg-1, refx2, refy2, 3);
-    //
-    idx = idx1;
-    for (int i=0; i<NDIVL; i++) {
-        if (!mask[i]) {
-            float yR = 0.0;
-            frac_acc = 0.0;
-            if (yL > 0.5) {
-                idx = idx2;
-            }
-            for (int j=0; j<NDIVR; j++) {
-                if (intersect(0.0, yL, 1.0, yR, x1, y1, x2, y2, idx, nseg)) {
-                    //frac_acc = 0.0;
-                } else {
-                    frac_acc += dyR;
+    /*
+    Ray-crossing
+    */
+    if (nseg > (ave_nseg_cross*NDIVR)) {
+        float refx1[3] = {0.0, 0.0,  0.0};
+        float refy1[3] = {0.0, 0.25, 0.5};
+        float refx2[3] = {0.0, 0.0,  0.0};
+        float refy2[3] = {0.5, 0.75, 1.0};
+        sort_segments(x1, y1, x2, y2, idx1, 0, nseg-1, refx1, refy1, 3);
+        sort_segments(x1, y1, x2, y2, idx2, 0, nseg-1, refx2, refy2, 3);
+        //
+        idx = idx1;
+        for (int i=0; i<NDIVL; i++) {
+            if (!mask[i]) {
+                if (yL > 0.5) {
+                    idx = idx2;
                 }
-                if ((1.0 - yR + frac_acc) <= frac_max) {
+                float yR = 0.0;
+                frac_acc = 0.0;
+                for (int j=0; j<NDIVR; j++) {
+                    if (!(intersect(0.0, yL, 1.0, yR, x1, y1, x2, y2, idx, nseg))) {
+                        frac_acc += dyR;
+                    }
+                    if ((1.0 - yR + frac_acc) <= frac_max) {
+                        break;
+                    }
+                    yR += dyR;
+                }
+                if (frac_acc > frac_max) {
+                    frac_max = frac_acc;
+                }
+                if (frac_max > 0.999) {
                     break;
                 }
-                yR += dyR;
             }
-            if (frac_acc > frac_max) {
-                frac_max = frac_acc;
-            }
-            if (frac_max > 0.999) {
-                break;
-            }
+            yL += dyL;
         }
-        yL += dyL;
-    }
-/*
-Chain of intervals
-*/
-#else
-    interval *itv;
-    float itvvL, itvvR;
-    itv = NULL;
-    for (int i=0; i<NDIVL; i++) {
-        //printf("i = %d\n", i);
-        if (!mask[i]) {
-            for (int j=0; j<nseg; j++) {
-                get_view_interval(0.0, yL, 1.0, 0.0, 1.0, \
-                                  x1[j], y1[j], x2[j], y2[j], \
-                                  &itvvL, &itvvR);
-                //printf("AAA\n");
-                add_to_interval(&itv, itvvL, itvvR);
-                if ((itv == NULL) && (itvvL < itvvR)) {
-                    //printf("Wrong: %f, %f\n", itvvL, itvvR);
+    /*
+    Chain of intervals
+    */
+    } else {
+        for (int i=0; i<NDIVL; i++) {
+            if (!mask[i]) {
+                interval *itv;
+                float itvvL, itvvR;
+                itv = NULL;
+                for (int j=0; j<nseg; j++) {
+                    get_view_interval(0.0, yL, 1.0, 0.0, 1.0, \
+                                      x1[j], y1[j], x2[j], y2[j], \
+                                      &itvvL, &itvvR);
+                    add_to_interval(&itv, itvvL, itvvR);
+                    if ((j%1000 == 0) && (j > 0)) {
+                        if (sumup_interval(itv) >= 0.999) {
+                            break;
+                        }
+                    }
                 }
+                frac_acc = 1.0 - sumup_interval(itv);
+                if (frac_acc > frac_max) {
+                    frac_max = frac_acc;
+                }
+                destroy_interval(&itv);
             }
-            float summed = sumup_interval(itv);
-            frac_acc = 1.0 - summed;
-            //printf("%.3f\n", frac_acc);
-            if (frac_acc > frac_max) {
-                frac_max = frac_acc;
-            }
+            yL += dyL;
         }
-        destroy_interval(&itv);
-        yL += dyL;
     }
-#endif
     printf("%.3f\n", frac_max);
     return 0;
 }
