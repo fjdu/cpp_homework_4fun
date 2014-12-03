@@ -24,6 +24,15 @@ typedef struct interval {
 } interval;
 
 
+interval *go_to_head(interval *itv) {
+    if (itv->left == NULL) {
+        return itv;
+    } else {
+        return go_to_head(itv->left);
+    }
+}
+
+
 void cleanup_interval_rightward(interval **itv) {
     if ((*itv)->right == NULL) {
         return;
@@ -445,6 +454,8 @@ void make_mask(bool *mask, int ndiv, float dy, \
     // Mask out the completely blocked region
     float yT, yB;
     int iT, iB;
+    interval *itv_mask;
+    itv_mask = NULL;
     for (int i=0; i<nseg; i++) {
         if (y1[i] > y2[i]) {
             yT = ymaxR - (xR - xL) / (xR - x1[i]) * (ymaxR - y1[i]);
@@ -457,17 +468,33 @@ void make_mask(bool *mask, int ndiv, float dy, \
         }
         yB = clip(yB, yminL, ymaxL);
         yT = clip(yT, yminL, ymaxL);
-        if (yT > yB) {
-            iB = (yB - yminL) / dy;
-            iT = (yT - yminL) / dy;
-            if (iT > ndiv) {
-                iT = ndiv;
-            }
-            for (int j=iB; j<=iT; j++) {
-                mask[j] = true;
-            }
-        }
+        add_to_interval(&itv_mask, yB, yT);
+        //if (yT > yB) {
+        //    iB = (yB - yminL) / dy;
+        //    iT = (yT - yminL) / dy;
+        //    if (iT > ndiv) {
+        //        iT = ndiv;
+        //    }
+        //    for (int j=iB; j<=iT; j++) {
+        //        mask[j] = true;
+        //    }
+        //}
     }
+    itv_mask = go_to_head(itv_mask);
+    while (itv_mask != NULL) {
+        yB = itv_mask->vL;
+        yT = itv_mask->vR;
+        iB = (yB - yminL) / dy;
+        iT = (yT - yminL) / dy;
+        if (iT > ndiv) {
+            iT = ndiv;
+        }
+        for (int j=iB; j<=iT; j++) {
+            mask[j] = true;
+        }
+        itv_mask = itv_mask->right;
+    };
+    destroy_interval(&itv_mask);
 }
 
 
