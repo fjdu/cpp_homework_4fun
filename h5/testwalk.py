@@ -37,7 +37,7 @@ def cmp_walk(nseg=1000, lenseg = 0.3, seed_val=None):
 ntot = 10
 
 for i in xrange(ntot):
-    p, s, t = cmp_walk(nseg=500, lenseg=0.003, seed_val=37*i+123456)
+    p, s, t = cmp_walk(nseg=1000, lenseg=0.002, seed_val=97*i+23456)
     p = p.replace('\n', '')
     if p == '':
         with open('xxx', 'w') as f:

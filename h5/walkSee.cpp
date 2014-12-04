@@ -13,6 +13,9 @@
 #define NDIVR 10000
 
 
+#define SORT_INTERVALS
+
+
 using namespace std;
 
 
@@ -22,6 +25,11 @@ typedef struct interval {
     float vL, vR;
     struct interval *left, *right;
 } interval;
+
+
+typedef struct simple_interval {
+    float vL, vR;
+} simple_interval;
 
 
 void go_to_head(interval **itv) {
@@ -494,6 +502,57 @@ void make_mask(bool *mask, int ndiv, float dy, \
 }
 
 
+void swap_interval(simple_interval *itvs, int i1, int i2) {
+    float t1 = itvs[i1].vL, t2 = itvs[i1].vR;
+    itvs[i1].vL = itvs[i2].vL;
+    itvs[i1].vR = itvs[i2].vR;
+    itvs[i2].vL = t1;
+    itvs[i2].vR = t2;
+}
+
+
+int partition_intervals(simple_interval *itvs, int i1, int i2) {
+    float piv1=itvs[i2].vL, piv2=itvs[i2].vR;
+    int storeidx = i1-1;
+    for (int i=i1; i<=i2-1; i++) {
+        if ((itvs[i].vL < piv1) || \
+            ((itvs[i].vL == piv1) && (itvs[i].vR <= piv2))) {
+            storeidx++;
+            swap_interval(itvs, i, storeidx);
+        }
+    }
+    swap_interval(itvs, storeidx+1, i2);
+    return storeidx+1;
+}
+
+
+void sort_intervals(simple_interval *itvs, int i1, int i2) {
+    if (i1 < i2) {
+        int p = partition_intervals(itvs, i1, i2);
+        sort_intervals(itvs, i1, p-1);
+        sort_intervals(itvs, p+1, i2);
+    }
+}
+
+
+float sumup_simpleintervals(simple_interval *itvs, int nseg) {
+    float s = itvs[0].vR - itvs[0].vL;
+    float rightmost = itvs[0].vR;
+    for (int i=1; i<nseg; i++) {
+        if (itvs[i].vL >= rightmost) {
+            s += (itvs[i].vR - itvs[i].vL);
+            rightmost = itvs[i].vR;
+        } else if (itvs[i].vR > rightmost) {
+            s += (itvs[i].vR - rightmost);
+            rightmost = itvs[i].vR;
+        }
+        //printf("%5d: %.5f, %.5f\n", i, itvs[i].vL, itvs[i].vR);
+    }
+    return s;
+}
+
+
+
 int main(int argc, char *argv[]){
     string line = "";
     std::getline(std::cin, line, '\n');
@@ -547,6 +606,7 @@ int main(int argc, char *argv[]){
     //
     float frac_max = 0.0, frac_acc;
     float yL = 0.0;
+#ifndef SORT_INTERVALS
     /*
     Ray-crossing
     */
@@ -613,6 +673,34 @@ int main(int argc, char *argv[]){
             yL += dyL;
         }
     }
+#else
+    /*
+    Sort the intervals
+    */
+    simple_interval *itvs;
+    itvs = new simple_interval[nseg];
+    for (int i=0; i<NDIVL; i++) {
+        if (!mask[i]) {
+            float itvvL, itvvR;
+            for (int j=0; j<nseg; j++) {
+                get_view_interval(0.0, yL, 1.0, 0.0, 1.0, \
+                                  x1[j], y1[j], x2[j], y2[j], \
+                                  &itvvL, &itvvR);
+                itvs[j].vL = itvvL;
+                itvs[j].vR = itvvR;
+            }
+            sort_intervals(itvs, 0, nseg-1);
+            frac_acc = 1.0 - sumup_simpleintervals(itvs, nseg);
+            if (frac_acc > frac_max) {
+                frac_max = frac_acc;
+            }
+        }
+        yL += dyL;
+    }
+#endif
+    /*
+    The end
+    */
     printf("%.3f\n", frac_max);
     return 0;
 }
