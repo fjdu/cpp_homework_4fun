@@ -28,13 +28,14 @@ def cmp_walk(nseg=1000, lenseg = 0.3, seed_val=None):
     s = ''.join(['{:.4f} {:.4f} {:.4f} {:.4f} '.format(x1[i], y1[i], x2[i], y2[i]) \
                 for i in range(nseg)])
     cmd = './walkSee'
+    #cmd = './walkSee_LH'
     
     t0 = time.time()
     p = Popen ([cmd], stdout=PIPE, stderr=PIPE, stdin=PIPE)
     sout1, serr = p.communicate(s + '\n')
     return sout1, s, time.time()-t0
 
-ntot = 10
+ntot = 50
 
 for i in xrange(ntot):
     p, s, t = cmp_walk(nseg=1000, lenseg=0.002, seed_val=97*i+23456)
