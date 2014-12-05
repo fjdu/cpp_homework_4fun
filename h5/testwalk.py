@@ -35,10 +35,10 @@ def cmp_walk(nseg=1000, lenseg = 0.3, seed_val=None):
     sout1, serr = p.communicate(s + '\n')
     return sout1, s, time.time()-t0
 
-ntot = 50
+ntot = 10
 
 for i in xrange(ntot):
-    p, s, t = cmp_walk(nseg=1000, lenseg=0.002, seed_val=97*i+23456)
+    p, s, t = cmp_walk(nseg=3001, lenseg=0.002, seed_val=97*i+23456)
     p = p.replace('\n', '')
     if p == '':
         with open('xxx', 'w') as f:

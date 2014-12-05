@@ -508,12 +508,26 @@ void swap_interval(simple_interval *itvs, int i1, int i2) {
 }
 
 
+//int partition_intervals(simple_interval *itvs, int i1, int i2) {
+//    double piv1=itvs[i2].vL, piv2=itvs[i2].vR;
+//    int storeidx = i1-1;
+//    for (int i=i1; i<=i2-1; i++) {
+//        if ((itvs[i].vL < piv1) || \
+//            ((itvs[i].vL == piv1) && (itvs[i].vR <= piv2))) {
+//            storeidx++;
+//            swap_interval(itvs, i, storeidx);
+//        }
+//    }
+//    swap_interval(itvs, storeidx+1, i2);
+//    return storeidx+1;
+//}
+
+
 int partition_intervals(simple_interval *itvs, int i1, int i2) {
-    double piv1=itvs[i2].vL, piv2=itvs[i2].vR;
+    double piv1=itvs[i2].vL;
     int storeidx = i1-1;
     for (int i=i1; i<=i2-1; i++) {
-        if ((itvs[i].vL < piv1) || \
-            ((itvs[i].vL == piv1) && (itvs[i].vR <= piv2))) {
+        if (itvs[i].vL < piv1) {
             storeidx++;
             swap_interval(itvs, i, storeidx);
         }
@@ -559,9 +573,9 @@ int main(int argc, char *argv[]){
     while (lineStream >> tmp) {
         values.push_back(tmp);
     }
-    if ((values.size() % 4) != 0) {
-        return -1;
-    }
+    //if ((values.size() % 4) != 0) {
+    //    return -1;
+    //}
     int nseg = values.size() / 4;
     double *x1, *y1, *x2, *y2;
     int *idx1, *idx2, *idx;
@@ -603,7 +617,7 @@ int main(int argc, char *argv[]){
     //
     double frac_max = 0.0, frac_acc;
     double yL = 0.0;
-    if (nseg > (ave_nseg_cross*NDIVR)) {
+    if (nseg > (5000+ave_nseg_cross*NDIVR)) {
         /*
         Ray-crossing
         */
@@ -643,7 +657,7 @@ int main(int argc, char *argv[]){
                 break;
             }
         }
-    } else if (nseg > 300) {
+    } else if (nseg > 3000) {
         /*
         Chain of intervals
         */
