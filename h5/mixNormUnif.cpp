@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
     std::sort(values.begin(), values.end());
     //
     double m, p, a, b;
-    double m0;
+    double m0, p0, a0, b0;
     double ln_L=-1e30, ln_L_max=-1e30;
     for (int idx=1; idx<n-1;) {
         initial_guess(values, &p, &m, &idx);
@@ -120,11 +120,15 @@ int main(int argc, char *argv[]){
         if (ln_L_max < ln_L) {
             ln_L_max = ln_L;
             m0 = m;
+            p0 = p;
+            a0 = a;
+            b0 = b;
         }
     }
     if (n < 3) {
         m0 = 0.5*((*values.begin()) + (*(values.end()-1))) ;
     }
     printf("%d\n", (int)round(m0));
+    //printf("%.3e, %.3f, %.3f, %.3f\n", p0, m0, a0, b0);
     return 0;
 }
