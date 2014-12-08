@@ -8,12 +8,13 @@
 
 
 #define STD_VAL 1.0
-#define LOG_2PI 1.83787706641
+#define LOG_2PI 1.83787706640934548356
 #define NMAX_ITER 500
 #define SMALL_VAL 1e-8
+#define VERY_SMALL_VAL 1e-6
 #define BIG_VAL 1e30
-#define ATOL 1e-6
-#define RTOL 1e-6
+#define ATOL 1e-4
+#define RTOL 1e-8
 
 using namespace std;
 
@@ -57,8 +58,16 @@ double one_iteration(std::vector<double> x, \
     for (it=x.begin(); it != x.end(); it++) {
         double v = *it;
         double pnorm = (*p) * exp(-0.5*((v-(*m))*(v-(*m)) + LOG_2PI));
-        double punif = (1.0 - *p) / (*b - *a);
+        double punif;
+        if ((v >= *a) && (v <= *b)) {
+            punif = (1.0 - *p) / (*b - *a);
+        } else {
+            punif = 0.0;
+        }
         double px = pnorm + punif;
+        if (px < VERY_SMALL_VAL) {
+            px = VERY_SMALL_VAL;
+        }
         double pnorm_here = pnorm/px;
         double punif_here = 1.0 - pnorm_here;
         ln_L += log(px);
@@ -82,55 +91,6 @@ double one_iteration(std::vector<double> x, \
 }
 
 
-//double one_iteration(std::vector<double> x, \
-//        double *p, double *m, double *a, double *b) {
-//    std::vector<double>::iterator it;
-//    double mnew = 0.0, munif_new = 0.0, sigunif_new = 0.0;
-//    double pnorm_t = 0.0, punif_t = 0.0;
-//    double ln_L = 0.0;
-//    double unif_min=BIG_VAL, unif_max=-BIG_VAL;
-//    double b_a_1 = 1.0 / (*b - *a);
-//    for (it=x.begin(); it != x.end(); it++) {
-//        double v = *it;
-//        double pnorm = (*p) * exp(-0.5*((v-(*m))*(v-(*m)) + LOG_2PI));
-//        double punif = (1.0 - *p) * b_a_1;
-//        double px = pnorm + punif;
-//        double pnorm_here = pnorm/px;
-//        double punif_here = 1.0 - pnorm_here;
-//        ln_L += log(px);
-//        pnorm_t += pnorm_here;
-//        punif_t += punif_here;
-//        mnew += pnorm_here * v;
-//        munif_new += punif_here * v;
-//        sigunif_new += punif_here * v * v;
-//        if (punif_here >= 0.5) {
-//            if (unif_min > punif_here) {
-//                unif_min = punif_here;
-//            }
-//            if (unif_max < punif_here) {
-//                unif_max = punif_here;
-//            }
-//        }
-//    }
-//    mnew /= pnorm_t;
-//    munif_new /= punif_t;
-//    sigunif_new = sigunif_new/punif_t - munif_new*munif_new;
-//    //
-//    *p = pnorm_t / (double)x.size();
-//    *m = mnew;
-//    if ((unif_min == BIG_VAL) || (unif_max == -BIG_VAL)) {
-//        double tmp = sqrt(3.0*sigunif_new);
-//        *a = munif_new - tmp;
-//        *b = munif_new + tmp;
-//    } else {
-//        *a = unif_min;
-//        *b = unif_max;
-//    }
-//    //printf("%.3f, %.3f, %.3f, %.3f\n", *p, mnew, munif_new, sigunif_new);
-//    return ln_L;
-//}
-
-
 int main(int argc, char *argv[]){
     string line = "";
     std::getline(std::cin, line, '\n');
@@ -147,35 +107,25 @@ int main(int argc, char *argv[]){
     double m0, p0, a0, b0;
     double ln_L=-BIG_VAL, ln_L_max=-BIG_VAL;
     for (int idx=1; idx<n-1;) {
-        int i0 = idx;
         initial_guess(values, &p, &m, &idx);
-        int i1 = idx;
-        if (values[i0] - values[0] <= STD_VAL) {
-            if (i1 <= n-1) {
-                a = values[i1];
-            } else {
-                a = values[0];
-            }
-        } else {
-            a = values[0];
-        }
-        if (i1 < n - 1) {
-            b = values[n-1];
-        } else {
-            b = values[i0];
-        }
-        if (b <= a) {
-            b = a + 1.0;
-        }
+        a = values[0];
+        b = values[n-1];
         //
         //printf("\t%4d: INIT %.3e, %.3f, %.3f, %.3f\n", 0, p, m, a, b);
         double p1=0.0, m1=0.0, a1=0.0, b1=0.0;
         for (int i=0; i<NMAX_ITER; i++) {
             tmp = one_iteration(values, &p, &m, &a, &b);
             //printf("\t%4d: ITER %.3e, %.3f, %.3f, %.3f\n", i, p, m, a, b);
+            if (ln_L_max < tmp) {
+                ln_L_max = tmp;
+                m0 = m;
+                p0 = p;
+                a0 = a;
+                b0 = b;
+            }
             if ((p < SMALL_VAL) || \
                 ((i > 10) && (tmp < ln_L)) || \
-                (fabs(tmp-ln_L) < RTOL*tmp) || \
+                (fabs(tmp-ln_L) < RTOL*fabs(ln_L)) || \
                 ((fabs(p-p1) < ATOL + RTOL*p1) && \
                  (fabs(m-m1) < ATOL + RTOL*m1) && \
                  (fabs(a-a1) < ATOL + RTOL*a1) && \
@@ -184,13 +134,6 @@ int main(int argc, char *argv[]){
             }
             ln_L = tmp;
             p1 = p; m1 = m; a1 = a; b1 = b;
-        }
-        if (ln_L_max < ln_L) {
-            ln_L_max = ln_L;
-            m0 = m;
-            p0 = p;
-            a0 = a;
-            b0 = b;
         }
     }
     if (n < 3) {
