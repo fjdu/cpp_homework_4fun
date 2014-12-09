@@ -23,13 +23,13 @@ def one_run(ntot = 1000, p = 0.5, mu = 0.0, sig = 1.0, a = 0.0, b = 10.0, seed_v
     sout1, serr = p.communicate(s + '\n')
     return sout1, s, time.time()-t0
 
-nrun = 500
+nrun = 1000
 
 n_range = (50, 10000)
-p_range = (0.05, 0.99)
+p_range = (0.02, 0.99)
 mu_range = (-50, 50)
 a_range = (-20, 20)
-b_a_range = (0.5, 30)
+b_a_range = (0.5, 60)
 
 nerr = 0
 

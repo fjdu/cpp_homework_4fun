@@ -11,10 +11,10 @@
 #define LOG_2PI 1.83787706640934548356
 #define NMAX_ITER 500
 #define SMALL_VAL 1e-8
-#define VERY_SMALL_VAL 1e-6
+#define VERY_SMALL_VAL 1e-5
 #define BIG_VAL 1e30
-#define ATOL 1e-4
-#define RTOL 1e-8
+#define ATOL 1e-6
+#define RTOL 1e-6
 
 using namespace std;
 
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]){
             }
             if ((p < SMALL_VAL) || \
                 ((i > 10) && (tmp < ln_L)) || \
-                (fabs(tmp-ln_L) < RTOL*fabs(ln_L)) || \
+                (fabs(tmp-ln_L) < RTOL*fabs(tmp)) || \
                 ((fabs(p-p1) < ATOL + RTOL*p1) && \
                  (fabs(m-m1) < ATOL + RTOL*m1) && \
                  (fabs(a-a1) < ATOL + RTOL*a1) && \
